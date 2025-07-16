@@ -3,14 +3,14 @@ DEV_MODE=False
 
 # Bot variables
 LOAD_TIME_SECONDS=10                # Main page load time
-SHORT_LOAD_TIME_SECONDS=3           # How long to wait for things to become enabled after actions, should be adjusted to as short as possible for fast refreshes
-TIME_BETWEEN_REFRESH_SECONDS=0.5    # How long to wait between each refresh of the page
+SHORT_LOAD_TIME_SECONDS=1           # How long to wait for things to become enabled after actions, should be adjusted to as short as possible for fast refreshes
+TIME_BETWEEN_REFRESH_SECONDS=0.1    # How long to wait between each refresh of the page
 TIME_WAIT_AFTER_CLICK=0             # Used if need to simulate a real user, deemed unceccesary for calendly
 IS_HEADLESS=False                   # Whether you want to see what the bot does. Set to True if you want it to run in the background.
 
 # Booking variables
 TIME="10:00"                        # Input in string of "HH:MM" in 24HR format. I.e. "14:00"
-DAY=31
+DAY=30
 MONTH=7
 YEAR=2025
 BASE_URL="https://calendly.com/tabletennis-smrt/smrt-tabletennisbooking"
