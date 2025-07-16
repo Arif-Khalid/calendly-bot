@@ -17,7 +17,7 @@ This bot is used to automatically make a booking on calendly. Should be modified
     * Change the commented `Booking variables` as required
 
 # Running the code
-1. Navigate to the repo directory as in step 3
+1. Navigate to the repo directory as in step 3 of the setup
 2. Type `.venv/Scripts/python.exe main.py` and press enter
 3. Use Cntrl-C to quit the program from the terminal you ran it from when required as it runs endlessly until a successful booking is made
 
