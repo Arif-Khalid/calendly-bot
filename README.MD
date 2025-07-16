@@ -9,7 +9,7 @@ This bot is used to automatically make a booking on calendly. Should be modified
 3. Create virtual environment and install required packages
     * Navigate to the directory by typing `cd your_dir/calendly-bot` and pressing enter in a terminal
     * Type `python3 -m venv .venv` and press enter which creates the virtual env
-    * Activate the venv by running typing `./venv/Scripts/activate` and press enter (this is for Windows OS) [For non-windows](https://docs.python.org/3/tutorial/venv.html)
+    * Activate the venv by running typing `./.venv/Scripts/activate` and press enter (this is for Windows OS) [For non-windows](https://docs.python.org/3/tutorial/venv.html)
     * Install from requirements.txt file by typing `pip install -r requirements.txt` and press enter
 4. Adjust variables to your requirements
     * Open `your_dir/constants.py` in your favourite text editor
