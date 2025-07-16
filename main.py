@@ -1,24 +1,24 @@
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from selenium.webdriver.chrome.options import Options
 import time
 
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
 
-from constants import BASE_URL, DAY, DEV_MODE, EMAIL, MONTH, MONTH_STRING, NAME, NEXT_BUTTON_XPATH, SHORT_LOAD_TIME_SECONDS, SUBMIT_BUTTON_XPATH, TIME, TIME_BETWEEN_REFRESH_SECONDS, TIME_BUTTON_XPATH, TIME_WAIT_AFTER_CLICK, URL, LOAD_TIME_SECONDS, USER_DATA_DIR, YEAR
+from constants import DAY, DEV_MODE, EMAIL, MONTH, MONTH_STRING, NAME, NEXT_BUTTON_XPATH, SHORT_LOAD_TIME_SECONDS, SUBMIT_BUTTON_XPATH, TIME, TIME_BETWEEN_REFRESH_SECONDS, TIME_BUTTON_XPATH, TIME_WAIT_AFTER_CLICK, URL, LOAD_TIME_SECONDS, YEAR, SCHEDULED_SUCCESS_MESSAGE_XPATH
 
-options = webdriver.ChromeOptions()
-options.add_argument(USER_DATA_DIR)
-options.add_experimental_option("excludeSwitches", ["enable-automation"])
-options.add_experimental_option('useAutomationExtension', False)
-driver = webdriver.Chrome(options=options)
-# driver.implicitly_wait(LOAD_TIME_SECONDS)
+colorama_init()
+driver = uc.Chrome()
 wait = WebDriverWait(driver, LOAD_TIME_SECONDS)
+
+# Use if need to simulate slower typing on an input element
+def send_keys_slow(inputElem, keys):
+    for c in keys:
+        inputElem.send_keys(c)
+        time.sleep(0.2)
 
 # Returns true if booking was successful, otherwise return false
 def make_booking():
@@ -59,28 +59,17 @@ def make_booking():
         time.sleep(TIME_WAIT_AFTER_CLICK)
    
     def input_details_and_confirm():
-        def send_keys_slow(inputElem, keys):
-            for c in keys:
-                inputElem.send_keys(c)
-                time.sleep(0.2)
         WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS).until(lambda _ : driver.find_element(By.TAG_NAME, "input"))
         nameInput, emailInput, *_ = driver.find_elements(By.TAG_NAME, "input")
-        send_keys_slow(nameInput, NAME)
-        # nameInput.send_keys(NAME)
-        send_keys_slow(emailInput, EMAIL)
-        # emailInput.send_keys(EMAIL)
+        # send_keys_slow(nameInput, NAME)
+        # send_keys_slow(emailInput, EMAIL)
+        nameInput.send_keys(NAME)
+        emailInput.send_keys(EMAIL)
         submitButton = driver.find_element(By.XPATH, SUBMIT_BUTTON_XPATH)
-        if(DEV_MODE):
-            # Stay at final page for debugging purposes
-            while(1):
-                pass
-        else:
+        if(not DEV_MODE):
             submitButton.click()
-            while(1):
-                pass
+            WebDriverWait(driver, LOAD_TIME_SECONDS).until(lambda _ : driver.find_element(By.XPATH, SCHEDULED_SUCCESS_MESSAGE_XPATH))
 
-    # Wait for loading to finish, which will enable the button if there are slots
-        
     try:
         button_to_press = get_calendar_button()
     except (TimeoutException, NoSuchElementException):
@@ -97,7 +86,7 @@ def make_booking():
     try:
         input_details_and_confirm()
     except (TimeoutException, NoSuchElementException):
-        raise Exception("Final stage of inputting name and email error. Likely caused by someone sniping the slot or the webpage changed")
+        raise Exception("Final stage of inputting name and email error. Likely caused by someone sniping the slot or the webpage changed.")
     return True
 
 while(True):
