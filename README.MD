@@ -1,5 +1,5 @@
 # Calendly bot
-This bot is used to automatically make a booking on calendly. Should be modified appropriately for different params of different bookings.
+This bot is used to automatically make a booking on calendly. Should be modified appropriately for different params of different bookings
 
 # Setup
 1. Clone this repo into a directory. For example `your_dir/calendly-bot/`.
@@ -15,6 +15,11 @@ This bot is used to automatically make a booking on calendly. Should be modified
     * Open `your_dir/constants.py` in your favourite text editor
     * Ensure DEV_MODE is False
     * Change the commented `Booking variables` as required
+
+# Running the code
+1. Navigate to the repo directory as in step 3
+2. Type `.venv/Scripts/python.exe main.py` and press enter
+3. Use Cntrl-C to quit the program from the terminal you ran it from when required as it runs endlessly until a successful booking is made
 
 # Additional information
 * If you see availability but the bot always refreshes without clicking through, lengthen SHORT_LOAD_TIME_SECONDS by 1 or 2 seconds
