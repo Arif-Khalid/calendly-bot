@@ -1,14 +1,14 @@
 import undetected_chromedriver as uc
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 import time
 
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
 
-from constants import DAY, DEV_MODE, EMAIL, MONTH, MONTH_STRING, NAME, NEXT_BUTTON_XPATH, SHORT_LOAD_TIME_SECONDS, SUBMIT_BUTTON_XPATH, TIME, TIME_BETWEEN_REFRESH_SECONDS, TIME_BUTTON_XPATH, TIME_WAIT_AFTER_CLICK, URL, LOAD_TIME_SECONDS, YEAR, SCHEDULED_SUCCESS_MESSAGE_XPATH, IS_HEADLESS
+from constants import DAY, DEV_MODE, EMAIL, MONTH, MONTH_STRING, NAME, NEXT_BUTTON_XPATH, SHORT_LOAD_TIME_SECONDS, SUBMIT_BUTTON_XPATH, TIME, TIME_BUTTON_XPATH, TIME_WAIT_AFTER_CLICK, URL, LOAD_TIME_SECONDS, YEAR, SCHEDULED_SUCCESS_MESSAGE_XPATH, IS_HEADLESS, SELENIUM_POLLING_TIME_SECONDS
 
 colorama_init()
 driver = uc.Chrome(headless=IS_HEADLESS)
@@ -25,7 +25,6 @@ def make_booking():
     driver.get(URL)
     # Calendar_cells are found first to force webpage to be implicitly loaded, thereby updating the current_url before we check
     wait.until(lambda _ : driver.find_elements(By.TAG_NAME, "td"))
-    calendar_cells = driver.find_elements(By.TAG_NAME, "td")
 
     # Check month and year as specified in queryParam of url, updated from inputted url once page loads
     if(not MONTH_STRING in driver.current_url):
@@ -33,33 +32,46 @@ def make_booking():
 
     # Find day in calendar
     def get_calendar_button():
-        button_to_press = None
-        for calendar_cell in calendar_cells:
-            calendar_button = calendar_cell.find_element(By.TAG_NAME, "button")
-            button_text = calendar_button.find_element(By.TAG_NAME, "span").text
-            if(not button_text):
-                continue
-            if(int(button_text) == DAY):
-                button_to_press = calendar_button
-                break
-        if(not button_to_press):
-            raise TimeoutException
-        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS).until(lambda _ : button_to_press.is_enabled())
-        return button_to_press
+        def get_current_button():
+            button_to_press = None
+            stale_element_found = True
+            while(stale_element_found):
+                calendar_cells = driver.find_elements(By.TAG_NAME, "td")
+                stale_element_found = False
+                for calendar_cell in calendar_cells:
+                    try:
+                        calendar_button = calendar_cell.find_element(By.TAG_NAME, "button")
+                        button_text = calendar_button.find_element(By.TAG_NAME, "span").text
+                        if(not button_text):
+                            continue
+                        if(int(button_text) == DAY):
+                            button_to_press = calendar_button
+                            break
+                    except StaleElementReferenceException as e:
+                        stale_element_found = True
+                        break
+                        #raise Exception("STALE ELEMENT EXCEPTION IN CALENDAR!!! Contact developer!")
+            if(not button_to_press):
+                raise Exception("The day button on the calendar cannot be found, you might need to adjust your variables")
+                
+            return button_to_press
+
+        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS, SELENIUM_POLLING_TIME_SECONDS).until(lambda _ : get_current_button().is_enabled())
+        return get_current_button()
 
     def get_next_button():
-        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS).until(lambda _ : driver.find_element(By.XPATH, TIME_BUTTON_XPATH))
+        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS, SELENIUM_POLLING_TIME_SECONDS).until(lambda _ : driver.find_element(By.XPATH, TIME_BUTTON_XPATH))
         time_button = driver.find_element(By.XPATH, TIME_BUTTON_XPATH)
     
         time_button.click()
         time.sleep(TIME_WAIT_AFTER_CLICK)
-        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS).until(lambda _ : driver.find_element(By.XPATH, NEXT_BUTTON_XPATH))
+        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS, SELENIUM_POLLING_TIME_SECONDS).until(lambda _ : driver.find_element(By.XPATH, NEXT_BUTTON_XPATH))
         next_button = driver.find_element(By.XPATH, NEXT_BUTTON_XPATH)
         next_button.click()
         time.sleep(TIME_WAIT_AFTER_CLICK)
    
     def input_details_and_confirm():
-        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS).until(lambda _ : driver.find_element(By.TAG_NAME, "input"))
+        WebDriverWait(driver, SHORT_LOAD_TIME_SECONDS, SELENIUM_POLLING_TIME_SECONDS).until(lambda _ : driver.find_element(By.TAG_NAME, "input"))
         nameInput, emailInput, *_ = driver.find_elements(By.TAG_NAME, "input")
         # send_keys_slow(nameInput, NAME)
         # send_keys_slow(emailInput, EMAIL)
@@ -69,6 +81,9 @@ def make_booking():
         if(not DEV_MODE):
             submitButton.click()
             WebDriverWait(driver, LOAD_TIME_SECONDS).until(lambda _ : driver.find_element(By.XPATH, SCHEDULED_SUCCESS_MESSAGE_XPATH))
+        else:
+            while(1):
+                pass
 
     try:
         button_to_press = get_calendar_button()
@@ -91,13 +106,16 @@ def make_booking():
 
 while(True):
     try:
-        if(make_booking()):
-            break
+        make_booking()
+        # Only reaches here if successful
+        break
 
-        print(f"Waiting {TIME_BETWEEN_REFRESH_SECONDS} seconds before retry")
-        time.sleep(TIME_BETWEEN_REFRESH_SECONDS)
-
+    except KeyboardInterrupt as e:
+        print(f"{Fore.RED} Error: Keyboard Interrupt detected! {Style.RESET_ALL}")
+        driver.quit()
+        exit(0)
     except Exception as e:
         print(f"{Fore.RED}Error: {e}{Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Refreshing{Style.RESET_ALL}")
 
 print(f"{Fore.GREEN}Successfully booked {DAY}/{MONTH}/{YEAR}{Style.RESET_ALL}")
