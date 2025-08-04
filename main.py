@@ -111,7 +111,7 @@ while(True):
         break
 
     except KeyboardInterrupt as e:
-        print(f"{Fore.RED} Error: Keyboard Interrupt detected! {Style.RESET_ALL}")
+        print(f"{Fore.RED}Error: Keyboard Interrupt detected! {Style.RESET_ALL}")
         driver.quit()
         exit(0)
     except Exception as e:
